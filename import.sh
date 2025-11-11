@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Check for dependencies
-for pkg in jq curl; do
-    if ! command -v "$pkg" &> /dev/null; then
-        sudo apt install "$pkg" -y &> /dev/null
-    fi
-done
-
 # Configuration
 CLIENT_ID="${OPENVPN_CLIENT_ID:-}"
 CLIENT_SECRET="${OPENVPN_CLIENT_SECRET:-}"
