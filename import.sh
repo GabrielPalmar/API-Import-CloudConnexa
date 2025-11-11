@@ -1,9 +1,23 @@
 #!/bin/bash
 
-API_URL="${OPENVPN_API_URL:-}"
+# Check for dependencies
+for pkg in jq curl; do
+    if ! command -v "$pkg" &> /dev/null; then
+        sudo apt install "$pkg" -y &> /dev/null
+    fi
+done
+
+# Configuration
 CLIENT_ID="${OPENVPN_CLIENT_ID:-}"
 CLIENT_SECRET="${OPENVPN_CLIENT_SECRET:-}"
-OUTPUT_DIR="./api_data"
+API_URL="https://$(echo "$OPENVPN_CLIENT_ID" | awk -F '.' '{print $2}').api.openvpn.com"
+
+if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+    echo "Error: OPENVPN_CLIENT_ID and OPENVPN_CLIENT_SECRET must be set"
+    exit 1
+fi
+
+OUTPUT_DIR="./cloudconnexa_api_data"
 API_ENDPOINTS=(
   "/api/v1/access-groups"
   "/api/v1/access-visibility/enabled"
@@ -45,6 +59,9 @@ API_ENDPOINTS=(
 )
 page=0
 size=1000
+
+# Trap for cleanup on interrupt
+trap 'echo -e "\n\nScript interrupted. Partial data saved in ${OUTPUT_DIR}/"' INT TERM
 
 # Generate OAuth token
 echo "Generating OAuth token..."
@@ -152,6 +169,7 @@ done
 # Generate report
 echo "=========================================="
 echo "           IMPORT SUMMARY REPORT          "
+echo "           $(date '+%Y-%m-%d %H:%M:%S')   "
 echo "=========================================="
 echo ""
 printf "%-46s %-20s %-10s\n" "ENDPOINT" "STATUS" "ITEMS"
